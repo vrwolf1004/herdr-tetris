@@ -1,0 +1,32 @@
+{
+  "title": "TETRIS",
+  "score": "SCORE",
+  "lines": "LINES",
+  "level": "LEVEL",
+  "next": "NEXT",
+  "controls": [
+    "A/D 또는 좌우: 이동",
+    "S 또는 아래: 내리기",
+    "W 또는 위: 회전",
+    "Space: 바로 내리기",
+    "P: 일시정지   Q: 종료"
+  ],
+  "status_game_over": "게임 오버 - R: 다시 시작, Q: 종료",
+  "status_paused": "일시정지 - P: 계속",
+  "tty_required": "터미널에서 직접 실행해 주세요.",
+  "toggle_hint": "Ctrl+T: 전환",
+  "monitor": {
+    "prompt": "$ ",
+    "command_help": {
+      "help": "명령 목록 보기",
+      "status": "서비스 상태 보기",
+      "logs": "최근 로그 보기",
+      "clear": "출력 지우기"
+    },
+    "not_found": "{name}: 명령을 찾을 수 없습니다",
+    "status_title": "서비스 상태",
+    "status_line": "{service:<14} {state:<5} cpu {cpu:3.0f}%  mem {mem:3.0f}%  p95 {p95:4d}ms",
+    "state_ok": "정상",
+    "state_warn": "주의"
+  }
+}

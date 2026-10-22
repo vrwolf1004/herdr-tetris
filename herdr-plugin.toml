@@ -1,0 +1,42 @@
+id = "herdr-tetris"
+name = "herdr-tetris"
+version = "0.1.0"
+min_herdr_version = "0.9.0"
+platforms = ["windows", "linux", "macos"]
+description = "Terminal Tetris in a pane of the shared herdr-dock workspace"
+
+# 실행기 이름이 OS 마다 달라(Windows: python, Linux/macOS: python3) 같은 동작을 OS 별로 선언한다.
+# herdr 는 액션 id 중복을 허용하지 않으므로 Windows 쪽 id 에 -windows 를 붙인다.
+# 게임은 공용 "herdr-dock" workspace 의 pane 안에서 돌고, stop 은 그 pane 을 닫는다.
+
+# ---------------------------------------------------------------- Linux / macOS
+
+[[actions]]
+id = "start"
+title = "tetris: start game in dock"
+platforms = ["linux", "macos"]
+contexts = ["global"]
+command = ["python3", "-X", "utf8", "src/plugin.py", "start"]
+
+[[actions]]
+id = "stop"
+title = "tetris: stop game and hide dock pane"
+platforms = ["linux", "macos"]
+contexts = ["global"]
+command = ["python3", "-X", "utf8", "src/plugin.py", "stop"]
+
+# ---------------------------------------------------------------- Windows
+
+[[actions]]
+id = "start-windows"
+title = "tetris: start game in dock"
+platforms = ["windows"]
+contexts = ["global"]
+command = ["python", "-X", "utf8", "src/plugin.py", "start"]
+
+[[actions]]
+id = "stop-windows"
+title = "tetris: stop game and hide dock pane"
+platforms = ["windows"]
+contexts = ["global"]
+command = ["python", "-X", "utf8", "src/plugin.py", "stop"]

@@ -1,0 +1,32 @@
+{
+  "title": "TETRIS",
+  "score": "SCORE",
+  "lines": "LINES",
+  "level": "LEVEL",
+  "next": "NEXT",
+  "controls": [
+    "A/D or Left/Right: move",
+    "S or Down: soft drop",
+    "W or Up: rotate",
+    "Space: hard drop",
+    "P: pause   Q: quit"
+  ],
+  "status_game_over": "GAME OVER - R: restart, Q: quit",
+  "status_paused": "PAUSED - P: resume",
+  "tty_required": "Please run this in an interactive terminal.",
+  "toggle_hint": "Ctrl+T: switch",
+  "monitor": {
+    "prompt": "$ ",
+    "command_help": {
+      "help": "show this list",
+      "status": "show service status",
+      "logs": "show recent log lines",
+      "clear": "clear this output"
+    },
+    "not_found": "{name}: command not found",
+    "status_title": "SERVICE STATUS",
+    "status_line": "{service:<14} {state:<5} cpu {cpu:3.0f}%  mem {mem:3.0f}%  p95 {p95:4d}ms",
+    "state_ok": "ok",
+    "state_warn": "warn"
+  }
+}
