@@ -11,8 +11,17 @@ import os
 SRC_DIR = os.path.dirname(os.path.abspath(__file__))
 LOCALE_DIR = os.path.join(SRC_DIR, "locales")
 CONFIG_PATH = os.path.join(SRC_DIR, "..", "config.json")
-SUPPORTED = ("en", "ko")
+SUPPORTED = ("en", "ko", "ja", "de", "es", "fr", "ru")
 DEFAULT = "en"
+# Windows 는 "Korean_Korea" 처럼 언어 이름으로 준다. 그 이름을 언어 코드로 바꾼다.
+LANGUAGE_NAMES = {
+    "korean": "ko",
+    "japanese": "ja",
+    "german": "de",
+    "spanish": "es",
+    "french": "fr",
+    "russian": "ru",
+}
 
 
 def system_language():
@@ -21,8 +30,9 @@ def system_language():
     except ValueError:
         code = None
     code = code or os.environ.get("LANG", "")
-    if code.lower().startswith("korean"):  # Windows는 "Korean_Korea" 형식으로 준다.
-        return "ko"
+    for name, lang in LANGUAGE_NAMES.items():
+        if code.lower().startswith(name):
+            return lang
     prefix = code.split("_")[0].split(".")[0].lower()
     return prefix if prefix in SUPPORTED else DEFAULT
 

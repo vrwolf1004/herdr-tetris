@@ -14,7 +14,7 @@
   "status_game_over": "GAME OVER - R: restart, Q: quit",
   "status_paused": "PAUSED - P: resume",
   "tty_required": "Please run this in an interactive terminal.",
-  "toggle_hint": "Ctrl+T: switch",
+  "toggle_hint": "Ctrl+T: switch   2: ladder   3: snake   4: minesweeper",
   "monitor": {
     "prompt": "$ ",
     "command_help": {
@@ -28,5 +28,34 @@
     "status_line": "{service:<14} {state:<5} cpu {cpu:3.0f}%  mem {mem:3.0f}%  p95 {p95:4d}ms",
     "state_ok": "ok",
     "state_warn": "warn"
+  },
+  "ladder": {
+    "title": "LADDER GAME",
+    "pick": "Left/Right: choose a start column and trace the path down",
+    "hint": "1-4: games   R: new ladder   Ctrl+T: monitor   Q: quit",
+    "picked": "start {start} -> end {end}",
+    "none": "No column picked yet"
+  },
+  "snake": {
+    "title": "SNAKE",
+    "score": "SCORE",
+    "length": "LENGTH",
+    "best": "BEST",
+    "game_over": "GAME OVER - R: restart",
+    "full": "FULL! - R: play again",
+    "controls": "Arrows/WASD: turn",
+    "quit": "Q: quit   R: restart",
+    "switch": "1-4: games   Ctrl+T: monitor"
+  },
+  "minesweeper": {
+    "title": "MINESWEEPER",
+    "mines": "MINES",
+    "time": "TIME",
+    "boom": "BOOM! - R: restart",
+    "clear": "CLEAR! - R: play again",
+    "controls": "Arrows/WASD: move",
+    "open": "Space/Enter: open   F: flag",
+    "quit": "Q: quit   R: restart",
+    "switch": "1-4: games   Ctrl+T: monitor"
   }
 }

@@ -41,7 +41,7 @@ class SystemLanguageTest(unittest.TestCase):
             self.assertEqual(i18n.system_language(), "ko")
 
     def test_unsupported_locale_falls_back_to_en(self):
-        with mock.patch("locale.getlocale", return_value=("ja_JP", "UTF-8")):
+        with mock.patch("locale.getlocale", return_value=("it_IT", "UTF-8")):
             self.assertEqual(i18n.system_language(), "en")
 
     def test_missing_locale_uses_lang_env_then_en(self):
@@ -79,7 +79,7 @@ class ResolveLanguageTest(unittest.TestCase):
             self.assertEqual(i18n.resolve_language("auto"), "ko")
 
     def test_auto_or_invalid_values_fall_through_to_system(self):
-        with mock.patch.dict(os.environ, {"HERDR_TETRIS_LANG": "fr"}), mock.patch.object(
+        with mock.patch.dict(os.environ, {"HERDR_TETRIS_LANG": "it"}), mock.patch.object(
             i18n, "_config_language", return_value="auto"
         ), mock.patch.object(i18n, "system_language", return_value="ko"):
             self.assertEqual(i18n.resolve_language("auto"), "ko")

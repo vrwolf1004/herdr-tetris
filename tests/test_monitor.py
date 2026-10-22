@@ -10,9 +10,10 @@ SRC = os.path.join(ROOT, "src")
 sys.path.insert(0, SRC)
 
 import i18n  # noqa: E402
+from usage_stub import FakeUsage  # noqa: E402
 from monitor import (  # noqa: E402
-    BOLD, DIM, GRAY, LOG_HISTORY, NAME_WIDTH, OUTPUT_LINES, RESET, SERVICES, STEP_SECONDS, WHITE, Monitor,
-    display_width,
+    BOLD, DIM, GRAY, LOG_HISTORY, MEASURED_NAME, NAME_WIDTH, OUTPUT_LINES, RESET, SERVICES, STEP_SECONDS, USAGE_GRADIENT,
+    WHITE, Monitor, display_width, heat_code, usage_value_text,
 )
 
 ANSI = re.compile(r"\x1b\[[0-9;]*m")
@@ -33,9 +34,9 @@ def plain(text):
     return ANSI.sub("", text)
 
 
-def make_monitor(lang="en", seed=1):
+def make_monitor(lang="en", seed=1, cpu=42.0, mem=71.0):
     strings = i18n.load_strings(lang)
-    return Monitor(strings["monitor"], random.Random(seed))
+    return Monitor(strings["monitor"], random.Random(seed), FakeUsage(cpu, mem))
 
 
 class MonitorTest(unittest.TestCase):
@@ -142,16 +143,105 @@ class MonitorTest(unittest.TestCase):
         for i in range(30):
             mon.step(1_700_000_000.0 + i)
         mon.logs.append(("10:00:02", "error", "scheduler", "boom"))
-        codes = set(re.findall(r"\x1b\[[0-9;]*m", "\n".join(mon.render(120))))
+        lines = mon.render(120)
+        others = [line for i, line in enumerate(lines) if i != CHART_ROW]  # 가운데 줄은 실제 값 색을 쓴다
+        codes = set(re.findall(r"\x1b\[[0-9;]*m", "\n".join(others)))
         self.assertTrue(codes <= {RESET, BOLD, DIM, GRAY, WHITE, BOLD + WHITE}, codes)
 
-    def test_chart_row_is_drawn_from_totals(self):
-        mon = make_monitor()
-        for i in range(5):
-            mon.step(1_700_000_000.0 + i)
-        chart = plain(mon.render(78)[CHART_ROW])
-        self.assertTrue(chart.startswith(" rps "))
-        self.assertGreater(len(chart.strip()), len("rps"))
+    def test_middle_row_matches_the_confirmed_shape(self):
+        mon = make_monitor(cpu=37.0, mem=69.0)
+        mon.metrics[MEASURED_NAME]["p95"] = 319
+        mon.metrics[MEASURED_NAME]["rps"] = 106
+        mon.metrics[MEASURED_NAME]["graph"] = "###****++++++++="
+        middle = plain(mon.render(120)[CHART_ROW])
+        self.assertEqual(middle, f" {MEASURED_NAME:<{NAME_WIDTH}} cpu [####........]  37%  ###****++++++++=  mem  69%  p95  319ms  rps  106")
+
+    def test_middle_row_fields_are_in_the_service_row_order(self):
+        mon = make_monitor(cpu=37.0, mem=69.0)
+        middle = plain(mon.render(120)[CHART_ROW])
+        order = [middle.index(part) for part in ("cpu [", "37%", mon.metrics[MEASURED_NAME]["graph"], "mem", "p95", "rps")]
+        self.assertEqual(order, sorted(order))
+
+    def test_graph_characters_are_present_and_plain(self):
+        mon = make_monitor(cpu=37.0, mem=69.0)
+        graph = mon.metrics[MEASURED_NAME]["graph"]
+        self.assertEqual(len(graph), 16)
+        middle = mon.render(120)[CHART_ROW]
+        self.assertIn(f"  {graph}  mem", middle)  # 그래프 글자는 색 코드 없이 흰색과 회색 자리에 있다
+
+    def test_cpu_and_mem_percent_in_the_middle_row_are_the_measured_values(self):
+        for cpu, mem in ((0.0, 7.4), (40.0, 52.0), (67.0, 99.6), (100.0, 0.0)):
+            mon = make_monitor(cpu=cpu, mem=mem)
+            middle = plain(mon.render(78)[CHART_ROW])
+            self.assertIn(f"] {cpu:3.0f}%", middle, cpu)
+            self.assertIn(f"  mem {mem:3.0f}%", middle, mem)
+
+    def test_middle_row_bar_has_twelve_cells(self):
+        mon = make_monitor(cpu=40.0, mem=52.0)
+        middle = plain(mon.render(78)[CHART_ROW])
+        self.assertEqual(len(re.search(r"cpu \[([#.]*)\]", middle).group(1)), 12)
+
+    def test_filled_cells_and_cpu_percent_use_the_gradient(self):
+        mon = make_monitor(cpu=40.0, mem=52.0)
+        middle = mon.render(78)[CHART_ROW]
+        for i in range(5):  # 40% 는 12칸 중 5칸을 채운다
+            self.assertIn(heat_code((i + 1) / 12) + "#", middle, i)
+        self.assertNotIn(heat_code(6 / 12) + "#", middle)
+        self.assertIn(heat_code(0.40) + " 40%", middle)  # 숫자도 같은 사용률 색이다
+
+    def test_mem_percent_uses_the_gradient_without_a_bar(self):
+        mon = make_monitor(cpu=40.0, mem=100.0)
+        middle = mon.render(78)[CHART_ROW]
+        self.assertIn(heat_code(1.0) + "100%", middle)
+        self.assertEqual(plain(middle).count("["), 1)  # 막대는 cpu 한 개뿐이다
+
+    def test_unknown_values_are_drawn_as_double_dash(self):
+        mon = make_monitor(cpu=None, mem=None)
+        middle = plain(mon.render(78)[CHART_ROW])
+        self.assertIn("]   --", middle)
+        self.assertIn("mem   --", middle)
+
+    def test_fake_fields_in_the_middle_row_are_white_or_gray(self):
+        mon = make_monitor(cpu=40.0, mem=52.0)
+        middle = mon.render(120)[CHART_ROW]
+        graph = mon.metrics[MEASURED_NAME]["graph"]
+        graph_text = middle[middle.index(graph):middle.index(graph) + len(graph)]
+        rate_text = middle[middle.index("p95"):]
+        self.assertNotIn(chr(27) + "[38;5;", graph_text)
+        self.assertNotIn(chr(27) + "[38;5;", rate_text)
+
+    def test_service_rows_use_only_white_and_gray(self):
+        mon = make_monitor(cpu=100.0, mem=10.0)
+        for index, line in enumerate(mon.render(120)):
+            if index != CHART_ROW:
+                self.assertNotIn(chr(27) + "[38;5;", line, index)
+
+    def test_middle_row_fits_the_narrowest_width_and_keeps_cpu_and_mem(self):
+        mon = make_monitor(cpu=42.0, mem=71.0)
+        for width in (30, 40, 78, 160):
+            text = plain(mon.render(width)[CHART_ROW])
+            self.assertLessEqual(display_width(text), width, width)
+            self.assertIn("42%", text, width)
+            self.assertIn("71%", text, width)
+
+    def test_heat_color_follows_the_usage_ratio(self):
+        self.assertEqual(heat_code(0.0), "[38;5;45m")
+        self.assertEqual(heat_code(1.0), "[38;5;196m")
+        self.assertEqual(heat_code(0.5), "[38;5;226m")  # 가운데는 노랑
+        self.assertEqual(heat_code(-1.0), heat_code(0.0))  # 범위를 벗어나면 끝 색으로 자른다
+        self.assertEqual(heat_code(2.0), heat_code(1.0))
+
+    def test_heat_color_gets_warmer_as_usage_rises(self):
+        codes = [int(heat_code(r / 10)[len("[38;5;"):-1]) for r in range(11)]
+        self.assertEqual(codes[0], 45)
+        self.assertEqual(codes[-1], 196)
+        for code in codes:
+            self.assertIn(code, USAGE_GRADIENT)
+
+    def test_usage_value_color_matches_the_bar_end_color(self):
+        self.assertIn(heat_code(0.42), usage_value_text(42.0))
+        self.assertEqual(plain(usage_value_text(42.0)), " 42%")
+        self.assertEqual(plain(usage_value_text(None)), "  --")
 
     def test_step_appends_one_log_line_and_changes_metrics(self):
         mon = make_monitor()

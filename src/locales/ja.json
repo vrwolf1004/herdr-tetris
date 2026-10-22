@@ -1,0 +1,61 @@
+{
+  "title": "テトリス",
+  "score": "スコア",
+  "lines": "ライン",
+  "level": "レベル",
+  "next": "ネクスト",
+  "controls": [
+    "A/D または ←/→: 移動",
+    "S または ↓: ソフトドロップ",
+    "W または ↑: 回転",
+    "Space: ハードドロップ",
+    "P: 一時停止   Q: 終了"
+  ],
+  "status_game_over": "ゲームオーバー - R: 再開, Q: 終了",
+  "status_paused": "一時停止中 - P: 再開",
+  "tty_required": "対話型ターミナルで実行してください。",
+  "toggle_hint": "Ctrl+T: 切替   2: はしご   3: スネーク   4: マインスイーパー",
+  "monitor": {
+    "prompt": "$ ",
+    "command_help": {
+      "help": "コマンド一覧を表示",
+      "status": "CPU とメモリの使用率を表示",
+      "logs": "最近のログ行を表示",
+      "clear": "出力を消去"
+    },
+    "not_found": "{name}: コマンドが見つかりません",
+    "status_title": "サービス状態",
+    "status_line": "{service:<14} {state:<5} cpu {cpu:3.0f}%  mem {mem:3.0f}%  p95 {p95:4d}ms",
+    "state_ok": "正常",
+    "state_warn": "注意"
+  },
+  "ladder": {
+    "title": "はしごゲーム",
+    "pick": "←/→: 開始列を選んで下まで進む道を見る",
+    "hint": "1-4: ゲーム切替   R: 新しいはしご   Ctrl+T: モニター   Q: 終了",
+    "picked": "開始 {start} -> 到着 {end}",
+    "none": "まだ列を選んでいません"
+  },
+  "snake": {
+    "title": "スネーク",
+    "score": "スコア",
+    "length": "長さ",
+    "best": "ベスト",
+    "game_over": "ゲームオーバー - R: 再開",
+    "full": "全部埋まった! - R: もう一度",
+    "controls": "矢印/WASD: 向きを変える",
+    "quit": "Q: 終了   R: 再開",
+    "switch": "1-4: ゲーム切替   Ctrl+T: モニター"
+  },
+  "minesweeper": {
+    "title": "マインスイーパー",
+    "mines": "地雷",
+    "time": "時間",
+    "boom": "爆発! - R: 再開",
+    "clear": "クリア! - R: もう一度",
+    "controls": "矢印/WASD: カーソル移動",
+    "open": "Space/Enter: 開く   F: 旗",
+    "quit": "Q: 終了   R: 再開",
+    "switch": "1-4: ゲーム切替   Ctrl+T: モニター"
+  }
+}

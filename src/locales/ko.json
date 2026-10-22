@@ -14,7 +14,7 @@
   "status_game_over": "게임 오버 - R: 다시 시작, Q: 종료",
   "status_paused": "일시정지 - P: 계속",
   "tty_required": "터미널에서 직접 실행해 주세요.",
-  "toggle_hint": "Ctrl+T: 전환",
+  "toggle_hint": "Ctrl+T: 전환   2: 사다리   3: 스네이크   4: 지뢰찾기",
   "monitor": {
     "prompt": "$ ",
     "command_help": {
@@ -28,5 +28,34 @@
     "status_line": "{service:<14} {state:<5} cpu {cpu:3.0f}%  mem {mem:3.0f}%  p95 {p95:4d}ms",
     "state_ok": "정상",
     "state_warn": "주의"
+  },
+  "ladder": {
+    "title": "사다리 게임",
+    "pick": "←/→: 시작 열을 골라 아래까지 가는 길 보기",
+    "hint": "1-4: 게임   R: 새 사다리   Ctrl+T: 모니터   Q: 종료",
+    "picked": "시작 {start} -> 도착 {end}",
+    "none": "아직 고른 열이 없습니다"
+  },
+  "snake": {
+    "title": "스네이크",
+    "score": "점수",
+    "length": "길이",
+    "best": "최고",
+    "game_over": "게임 오버 - R: 다시 시작",
+    "full": "가득 참! - R: 다시 하기",
+    "controls": "방향키/WASD: 방향 바꾸기",
+    "quit": "Q: 종료   R: 다시 시작",
+    "switch": "1-4: 게임   Ctrl+T: 모니터"
+  },
+  "minesweeper": {
+    "title": "지뢰찾기",
+    "mines": "지뢰",
+    "time": "시간",
+    "boom": "펑! - R: 다시 시작",
+    "clear": "클리어! - R: 다시 하기",
+    "controls": "방향키/WASD: 커서 이동",
+    "open": "Space/Enter: 열기   F: 깃발",
+    "quit": "Q: 종료   R: 다시 시작",
+    "switch": "1-4: 게임   Ctrl+T: 모니터"
   }
 }

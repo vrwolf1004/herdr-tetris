@@ -1,0 +1,61 @@
+{
+  "title": "TETRIS",
+  "score": "PUNKTE",
+  "lines": "ZEILEN",
+  "level": "STUFE",
+  "next": "NÄCHSTER",
+  "controls": [
+    "A/D oder ←/→: bewegen",
+    "S oder ↓: schnell fallen",
+    "W oder ↑: drehen",
+    "Leertaste: sofort absetzen",
+    "P: Pause   Q: beenden"
+  ],
+  "status_game_over": "SPIEL VORBEI - R: neu starten, Q: beenden",
+  "status_paused": "PAUSE - P: weiter",
+  "tty_required": "Bitte in einem interaktiven Terminal ausführen.",
+  "toggle_hint": "Ctrl+T: wechseln   2: Leiter   3: Schlange   4: Minensuche",
+  "monitor": {
+    "prompt": "$ ",
+    "command_help": {
+      "help": "Liste anzeigen",
+      "status": "CPU- und Speicherauslastung anzeigen",
+      "logs": "letzte Logzeilen anzeigen",
+      "clear": "Ausgabe leeren"
+    },
+    "not_found": "{name}: Befehl nicht gefunden",
+    "status_title": "DIENSTSTATUS",
+    "status_line": "{service:<14} {state:<5} cpu {cpu:3.0f}%  mem {mem:3.0f}%  p95 {p95:4d}ms",
+    "state_ok": "ok",
+    "state_warn": "warn"
+  },
+  "ladder": {
+    "title": "LEITERSPIEL",
+    "pick": "←/→: Startspalte wählen und Weg nach unten verfolgen",
+    "hint": "1-4: Spiele   R: neue Leiter   Ctrl+T: Monitor   Q: beenden",
+    "picked": "Start {start} -> Ziel {end}",
+    "none": "Noch keine Spalte gewählt"
+  },
+  "snake": {
+    "title": "SCHLANGE",
+    "score": "PUNKTE",
+    "length": "LÄNGE",
+    "best": "BESTWERT",
+    "game_over": "SPIEL VORBEI - R: neu starten",
+    "full": "VOLL! - R: nochmal spielen",
+    "controls": "Pfeile/WASD: drehen",
+    "quit": "Q: beenden   R: neu starten",
+    "switch": "1-4: Spiele   Ctrl+T: Monitor"
+  },
+  "minesweeper": {
+    "title": "MINENSUCHE",
+    "mines": "MINEN",
+    "time": "ZEIT",
+    "boom": "BUMM! - R: neu starten",
+    "clear": "GESCHAFFT! - R: nochmal spielen",
+    "controls": "Pfeile/WASD: bewegen",
+    "open": "Leertaste/Enter: öffnen   F: Flagge",
+    "quit": "Q: beenden   R: neu starten",
+    "switch": "1-4: Spiele   Ctrl+T: Monitor"
+  }
+}

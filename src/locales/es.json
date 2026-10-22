@@ -1,0 +1,61 @@
+{
+  "title": "TETRIS",
+  "score": "PUNTOS",
+  "lines": "LÍNEAS",
+  "level": "NIVEL",
+  "next": "SIGUIENTE",
+  "controls": [
+    "A/D o ←/→: mover",
+    "S o ↓: caída rápida",
+    "W o ↑: girar",
+    "Espacio: caída directa",
+    "P: pausa   Q: salir"
+  ],
+  "status_game_over": "FIN DEL JUEGO - R: reiniciar, Q: salir",
+  "status_paused": "PAUSA - P: continuar",
+  "tty_required": "Ejecútelo en una terminal interactiva.",
+  "toggle_hint": "Ctrl+T: cambiar   2: escalera   3: serpiente   4: buscaminas",
+  "monitor": {
+    "prompt": "$ ",
+    "command_help": {
+      "help": "mostrar esta lista",
+      "status": "mostrar uso de CPU y memoria",
+      "logs": "mostrar las últimas líneas del registro",
+      "clear": "borrar esta salida"
+    },
+    "not_found": "{name}: comando no encontrado",
+    "status_title": "ESTADO DEL SERVICIO",
+    "status_line": "{service:<14} {state:<5} cpu {cpu:3.0f}%  mem {mem:3.0f}%  p95 {p95:4d}ms",
+    "state_ok": "ok",
+    "state_warn": "aviso"
+  },
+  "ladder": {
+    "title": "JUEGO DE ESCALERA",
+    "pick": "←/→: elige la columna de inicio y sigue el camino hacia abajo",
+    "hint": "1-4: juegos   R: nueva escalera   Ctrl+T: monitor   Q: salir",
+    "picked": "inicio {start} -> final {end}",
+    "none": "Aún no has elegido columna"
+  },
+  "snake": {
+    "title": "SERPIENTE",
+    "score": "PUNTOS",
+    "length": "LONGITUD",
+    "best": "MEJOR",
+    "game_over": "FIN DEL JUEGO - R: reiniciar",
+    "full": "¡LLENO! - R: jugar otra vez",
+    "controls": "Flechas/WASD: girar",
+    "quit": "Q: salir   R: reiniciar",
+    "switch": "1-4: juegos   Ctrl+T: monitor"
+  },
+  "minesweeper": {
+    "title": "BUSCAMINAS",
+    "mines": "MINAS",
+    "time": "TIEMPO",
+    "boom": "¡BOOM! - R: reiniciar",
+    "clear": "¡LIMPIO! - R: jugar otra vez",
+    "controls": "Flechas/WASD: mover",
+    "open": "Espacio/Enter: abrir   F: bandera",
+    "quit": "Q: salir   R: reiniciar",
+    "switch": "1-4: juegos   Ctrl+T: monitor"
+  }
+}

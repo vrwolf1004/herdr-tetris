@@ -8,12 +8,18 @@ Windows(msvcrt)와 macOS/Linux(termios)를 모두 지원하며 표준 라이브�
 
 import argparse
 import os
+import re
+import shutil
 import sys
 import time
+import unicodedata
 
 from game import HEIGHT, WIDTH, ROTATIONS, Game
-from i18n import load_strings, resolve_language
+from i18n import SUPPORTED, load_strings, resolve_language
+from ladder import Ladder
 from monitor import Monitor
+import minesweeper
+import snake
 
 if os.name == "nt":
     import msvcrt
@@ -25,6 +31,7 @@ else:
 ANSI_COLORS = {"I": 36, "O": 33, "T": 35, "S": 32, "Z": 31, "J": 34, "L": 37}
 EMPTY_CELL = " ."
 BLOCK_CELL = "[]"
+ANSI_RE = re.compile(r"\x1b\[[0-9;?]*[A-Za-z]")
 
 # 특수 키는 이름으로 바꾼다. 나머지는 입력한 글자 그대로 돌려준다(대소문자 유지).
 SPECIAL_KEYS = {
@@ -118,8 +125,25 @@ def render(game, strings, paused=False):
     return out
 
 
+def visible_width(text):
+    # 화면에 보이는 칸 수. ANSI 색 코드는 빼고, 한글·전각 문자는 두 칸으로 센다.
+    plain = ANSI_RE.sub("", text)
+    width = 0
+    for ch in plain:
+        if unicodedata.combining(ch):
+            continue
+        width += 2 if unicodedata.east_asian_width(ch) in ("W", "F") else 1
+    return width
+
+
 def draw(lines):
-    sys.stdout.write("\x1b[H" + "".join(line + "\x1b[K\n" for line in lines) + "\x1b[J")
+    # 가장 긴 줄 기준으로 가로를, 줄 수 기준으로 세로를 pane 한가운데에 맞춘다.
+    cols, rows = shutil.get_terminal_size()
+    left = max(0, (cols - max((visible_width(line) for line in lines), default=0)) // 2)
+    top = max(0, (rows - 1 - len(lines)) // 2)  # 마지막 줄바꿈으로 화면이 밀리지 않게 한 줄 남긴다
+    pad = " " * left
+    body = "".join(pad + line + "\x1b[K\n" for line in lines)
+    sys.stdout.write("\x1b[H" + "\x1b[2K\n" * top + body + "\x1b[J")
     sys.stdout.flush()
 
 
@@ -186,11 +210,141 @@ class TerminalMode:
         sys.stdout.flush()
 
 
+NUMBER_KEYS = ("1", "2", "3", "4")  # 게임 화면에서 이 키를 누르면 그 게임으로 바로 간다(새로 시작한다)
+SCREEN_FOR_KEY = {"1": "tetris", "2": "ladder", "3": "snake", "4": "minesweeper"}
+
+
+def panel_strings(strings, section):
+    """화면 문구 한 묶음. 언어 파일에 빠진 키는 영어 파일의 값을 쓴다."""
+    merged = dict(load_strings("en").get(section, {}))
+    merged.update(strings.get(section, {}))
+    return merged
+
+
+def ladder_lines(ladder, selected, strings):
+    s = panel_strings(strings, "ladder")
+    picked = s["none"] if selected is None else s["picked"].format(start=selected + 1, end=ladder.trace(selected)[0] + 1)
+    return [s["title"], "", *ladder.render(selected), "", picked, s["pick"], s["hint"]]
+
+
+def new_ladder_state():
+    """사다리 화면의 상태. 사다리 줄과 고른 열을 함께 들고 있어서 Ctrl+T 로 나갔다 와도 남는다."""
+    return {"ladder": Ladder(), "selected": None}
+
+
+def play_ladder(strings, state):
+    """사다리게임 화면을 돌린다. 'monitor', 'quit', 또는 숫자 키('1'~'4')를 반환한다.
+
+    ←/→ 로 시작 열을 고르면 아래까지 가는 경로를 보여 준다. R 은 새 사다리다.
+    Ctrl+T 는 모니터 화면이다. 숫자 키는 그 게임으로 바로 간다.
+    """
+    while True:
+        draw(ladder_lines(state["ladder"], state["selected"], strings))
+        key = read_key(0.1)
+        if key == "interrupt":
+            return "quit"
+        if key == "switch":
+            return "monitor"
+        if not key:
+            continue
+        if key in NUMBER_KEYS:
+            return key
+        if key == "left":
+            state["selected"] = 0 if state["selected"] is None else max(0, state["selected"] - 1)
+            continue
+        if key == "right":
+            state["selected"] = 0 if state["selected"] is None else min(state["ladder"].columns - 1, state["selected"] + 1)
+            continue
+        action = key.lower()
+        if action == "r":
+            state["ladder"] = Ladder()
+            state["selected"] = None
+        elif action == "q":
+            return "quit"
+
+
+def play_minesweeper(game, strings):
+    """지뢰찾기 화면을 돌린다. 'monitor', 'quit', 또는 숫자 키('1'~'4')를 반환한다. game 은 호출한 쪽이 든다."""
+    text = panel_strings(strings, "minesweeper")
+    while True:
+        draw(game.render(time.monotonic(), text))
+        key = read_key(0.1)
+        if key == "interrupt":
+            return "quit"
+        if key == "switch":
+            return "monitor"
+        if not key:
+            continue
+        if key in NUMBER_KEYS:
+            return key
+        action = key.lower()
+        if action == "q":
+            return "quit"
+        if action == "r":
+            game.restart()
+        elif action in minesweeper.KEY_MOVES:
+            game.move_cursor(*minesweeper.KEY_MOVES[action])
+        elif action in (" ", "enter"):
+            game.reveal(*game.cursor, now=time.monotonic())
+        elif action == "f":
+            game.toggle_flag(*game.cursor, now=time.monotonic())
+
+
+def play_snake(game, strings):
+    """스네이크 화면을 돌린다. 'monitor', 'quit', 또는 숫자 키('1'~'4')를 반환한다. game 은 호출한 쪽이 든다."""
+    text = panel_strings(strings, "snake")
+    next_tick = time.monotonic() + game.interval()
+    while True:
+        draw(game.render(text))
+        key = read_key(0.02)
+        if key == "interrupt":
+            return "quit"
+        if key == "switch":
+            return "monitor"
+        if key in NUMBER_KEYS:
+            return key
+        if key:
+            action = key.lower()
+            if action == "q":
+                return "quit"
+            if action == "r":
+                game.restart()
+            elif action in snake.KEY_DIRECTIONS:
+                game.turn(snake.KEY_DIRECTIONS[action])
+        now = time.monotonic()
+        if now >= next_tick:
+            game.tick()
+            next_tick = now + game.interval()
+
+
+def play_monitor(monitor):
+    """모니터 화면만 돌린다. 'back'(Ctrl+T), 'game'(game 명령), 'quit' 중 하나를 반환한다.
+
+    숫자 키는 입력줄 글자다. 게임으로 가지 않는다.
+    """
+    while True:
+        monitor.tick(time.time())
+        draw(monitor.render())
+        key = read_key(0.1)
+        if key == "interrupt":
+            return "quit"
+        if key == "switch":
+            return "back"
+        if key == "enter":
+            if monitor.submit() == "game":
+                return "game"
+        elif key == "backspace":
+            monitor.backspace()
+        elif key and len(key) == 1 and key.isprintable():
+            monitor.type_char(key)
+
+
 def play(game, strings, monitor, in_monitor):
-    """한 판을 진행한다. 'restart' 또는 'quit'을 반환한다.
+    """한 판을 진행한다. 'restart', 'quit', 또는 숫자 키('1'~'4')를 반환한다.
 
     in_monitor 가 True 면 모니터링 화면을 보여 주고 게임은 멈춰 둔다.
     Ctrl+T 로 화면을 바꾸고, 모니터에서는 Enter 로 입력줄을 실행한다. game 명령도 게임 화면으로 간다.
+    게임 화면에서 숫자 키 1~4 를 누르면 그 화면으로 간다(반환값은 그 숫자다). 모니터에서는 숫자가 입력줄 글자다.
     """
     paused = False
     next_fall = time.monotonic() + fall_interval(game.level)
@@ -209,6 +363,8 @@ def play(game, strings, monitor, in_monitor):
 
         if key == "interrupt":
             return "quit"
+        if not in_monitor and key in NUMBER_KEYS:
+            return key
         if key == "switch":
             switch = True
         elif in_monitor and key == "enter":
@@ -259,7 +415,7 @@ def main(argv=None):
     parser = argparse.ArgumentParser(description="Terminal Tetris")
     parser.add_argument(
         "--lang",
-        choices=("auto", "en", "ko"),
+        choices=("auto",) + SUPPORTED,
         default="auto",
         help="display language (default: auto; overrides HERDR_TETRIS_LANG and config.json)",
     )
@@ -272,10 +428,51 @@ def main(argv=None):
     monitor = Monitor(strings["monitor"])
     try:
         with TerminalMode():
-            # 처음에는 모니터링 화면을 보여 준다. 다시 시작한 판은 바로 게임 화면으로 간다.
-            in_monitor = True
-            while play(Game(), strings, monitor, in_monitor) == "restart":
-                in_monitor = False
+            # 처음에는 모니터링 화면을 보여 준다. 모니터의 Ctrl+T 는 tetris 게임 화면으로 간다.
+            screen, back = "monitor", "tetris"  # back: 모니터에서 Ctrl+T 를 누르면 돌아갈 화면
+            game = Game()
+            snake_game = snake.Snake()  # 최고 점수를 들고 있다. 판이 바뀌어도 남는다.
+            minesweeper_game = minesweeper.Minesweeper()
+            ladder_state = new_ladder_state()
+            while True:
+                if screen == "monitor" and back == "tetris":
+                    result = play(game, strings, monitor, True)
+                elif screen == "monitor":
+                    result = play_monitor(monitor)
+                    if result == "back":
+                        screen = back
+                        continue
+                    if result == "game":
+                        screen = "tetris"
+                        continue
+                elif screen == "tetris":
+                    result = play(game, strings, monitor, False)
+                elif screen == "ladder":
+                    result = play_ladder(strings, ladder_state)
+                elif screen == "snake":
+                    result = play_snake(snake_game, strings)
+                else:
+                    result = play_minesweeper(minesweeper_game, strings)
+
+                if result == "quit":
+                    break
+                if result == "monitor":
+                    # 게임 화면에서 Ctrl+T: 진행 상태는 그대로 두고 모니터를 보여 준다.
+                    back, screen = screen, "monitor"
+                elif result == "restart":
+                    game = Game()
+                    screen = "tetris"
+                elif result in NUMBER_KEYS:
+                    # 숫자 키: 지금 게임은 버리고, 그 숫자의 게임을 새로 시작한다.
+                    screen = SCREEN_FOR_KEY[result]
+                    if screen == "tetris":
+                        game = Game()
+                    elif screen == "ladder":
+                        ladder_state = new_ladder_state()
+                    elif screen == "snake":
+                        snake_game.restart()
+                    else:
+                        minesweeper_game.restart()
     except KeyboardInterrupt:
         pass  # POSIX 에서 Ctrl+C 는 글자가 아니라 신호로 들어온다. 터미널은 이미 복구됐다.
     return 0

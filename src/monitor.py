@@ -6,6 +6,7 @@
 
 대시보드 문구는 영어로 고정한다. 명령 응답(help, status 등)만 locales 의 언어를 따른다.
 색은 흰색과 회색만 쓰고, 단말 폭이 좁으면 막대, 스파크라인, 열을 줄인다.
+예외는 가운데 줄 하나다. 점 그래프 자리에 이 PC 의 CPU, 메모리 사용률을 256색 그라데이션 막대로 그린다(sysmetrics.py 가 잰다).
 게임 규칙(game.py)과는 관계가 없다. 시간과 난수는 밖에서 받으므로 테스트에서 값을 고정할 수 있다.
 """
 
@@ -14,6 +15,8 @@ import shutil
 import time
 import unicodedata
 from collections import deque
+
+from sysmetrics import start_default_usage
 
 TITLE = "SYSTEM MONITOR"
 HOST = "ops-node-07"
@@ -40,6 +43,7 @@ NAME_WIDTH = 14
 MODULE_WIDTH = 14
 BAR_WIDTH = 12
 SPARK_LEN = 16
+GRAPH_CHARS = "#*+=-:."  # 가운데 줄의 그래프 글자(가짜 값)
 SPARK_GAP = 2
 CHART_LEN = 60
 LOG_LINES = 4  # 대시보드에 보이는 로그 줄 수
@@ -62,6 +66,10 @@ WHITE = "\x1b[97m"
 LEVEL_COLORS = {"info": GRAY, "warn": BOLD + WHITE, "error": BOLD + WHITE}
 # help 목록. game 은 일부러 넣지 않는다. 입력하면 게임 화면으로 간다.
 HELP_COMMANDS = ("help", "status", "logs", "clear")
+# 가운데 줄(점 그래프 자리)에 이 PC 의 CPU, 메모리 사용률을 그린다. 칸 배치는 서비스 행과 같고 색만 다르다.
+MEASURED_NAME = "this-pc"  # 가운데 줄의 이름. 이름은 가짜 값이고 mem 퍼센트만 실제 값이다.
+# 256색 그라데이션. 앞쪽은 낮은 사용률(청록), 뒤쪽은 높은 사용률(빨강)이다.
+USAGE_GRADIENT = (45, 51, 87, 121, 156, 190, 226, 220, 214, 208, 202, 196)
 
 
 def display_width(text):
@@ -124,13 +132,42 @@ def format_duration(seconds):
     return f"{hours:02d}:{minutes:02d}:{secs:02d}"
 
 
+def heat_code(ratio):
+    """0~1 사이 비율을 그라데이션 색 하나의 ANSI 코드로 바꾼다."""
+    index = clamp(round(ratio * (len(USAGE_GRADIENT) - 1)), 0, len(USAGE_GRADIENT) - 1)
+    return f"\x1b[38;5;{USAGE_GRADIENT[index]}m"
+
+
+USAGE_CELL = "#"  # 서비스 행의 막대와 같은 글자
+USAGE_EMPTY = "."
+
+
+def usage_cells_text(percent, cells):
+    """막대 칸. 채운 칸마다 그 위치의 그라데이션 색을 쓰고, 빈 칸은 회색이다. 색이 없어도 # 개수로 값을 읽는다."""
+    if percent is None:
+        return color(USAGE_EMPTY * cells, GRAY)
+    filled = round(cells * percent / 100)
+    on = "".join(color(USAGE_CELL, heat_code((i + 1) / cells)) for i in range(filled))
+    return on + color(USAGE_EMPTY * (cells - filled), GRAY)
+
+
+def usage_value_text(percent):
+    """퍼센트 숫자 네 칸. 사용률 색으로 칠하고, 알 수 없으면 회색 --."""
+    if percent is None:
+        return color(f"{'--':>4}", GRAY)
+    return color(f"{percent:>3.0f}%", heat_code(percent / 100))
+
+
 class Monitor:
-    def __init__(self, strings, rng=None):
+    def __init__(self, strings, rng=None, usage=None):
         self.strings = strings  # locales 의 "monitor" 항목: 명령 응답 문구만 쓴다
         self._rng = rng or random.Random()
+        # usage 는 snapshot() 으로 (cpu, mem) 을 돌려주는 측정 객체다. 없으면 이 PC 를 재는 스레드를 켠다.
+        self._usage = usage if usage is not None else start_default_usage()
         self._next_step = 0.0
         self._started = None
         self.now = 0.0
+        rows = SERVICES + (MEASURED_NAME,)
         self.metrics = {
             name: {
                 "cpu": self._rng.uniform(10, 60),
@@ -138,9 +175,10 @@ class Monitor:
                 "p95": self._rng.randint(40, 300),
                 "rps": self._rng.randint(20, 400),
             }
-            for name in SERVICES
+            for name in rows
         }
-        self.cpu_history = {name: deque([self.metrics[name]["cpu"]], maxlen=CHART_LEN) for name in SERVICES}
+        self.cpu_history = {name: deque([self.metrics[name]["cpu"]], maxlen=CHART_LEN) for name in rows}
+        self.metrics[MEASURED_NAME]["graph"] = self._graph(self._rng)
         self.totals = deque(maxlen=CHART_LEN)  # 전체 요청 수 기록
         self.logs = []  # (시각, 수준, 모듈, 메시지)
         self.buffer = ""  # 입력줄
@@ -164,14 +202,15 @@ class Monitor:
             self._started = now
         self.now = now
         rng = self._rng
-        for name in SERVICES:
+        for name in SERVICES + (MEASURED_NAME,):
             metric = self.metrics[name]
             metric["cpu"] = clamp(metric["cpu"] + rng.uniform(-9, 9), 2, 98)
             metric["mem"] = clamp(metric["mem"] + rng.uniform(-2, 2), 10, 95)
             metric["p95"] = clamp(metric["p95"] + rng.randint(-30, 30), 15, 900)
             metric["rps"] = max(0, metric["rps"] + rng.randint(-40, 40))
             self.cpu_history[name].append(metric["cpu"])
-        self.totals.append(sum(metric["rps"] for metric in self.metrics.values()))
+        self.metrics[MEASURED_NAME]["graph"] = self._graph(rng)
+        self.totals.append(sum(self.metrics[name]["rps"] for name in SERVICES))
         code = rng.choice(LOG_CODES)
         ms = rng.randint(3, 900)
         module, template = rng.choice(LOG_TEMPLATES)
@@ -250,15 +289,50 @@ class Monitor:
 
     def _service_row(self, name, width):
         metric = self.metrics[name]
-        cpu, mem, p95, rps = metric["cpu"], metric["mem"], int(metric["p95"]), metric["rps"]
+        mem = f"{metric['mem']:3.0f}%"
+        return self._row(name, width, mem, mem)
+
+    @staticmethod
+    def _graph(rng):
+        return "".join(rng.choice(GRAPH_CHARS) for _ in range(SPARK_LEN))
+
+    def _measured_row(self, width, cpu, mem):
+        """가운데 줄: " this-pc        cpu [####........]  37%  ###****++++++++=  mem  69%  p95  319ms  rps  106".
+
+        서비스 행과 같은 순서다. cpu 막대와 퍼센트, mem 퍼센트가 실제 값이고 사용률 색이다.
+        이름, 그래프 글자, p95, rps 는 가짜 값이다. 폭이 모자라면 p95·rps, 그래프, 이름 순으로 뺀다.
+        """
+        metric = self.metrics[MEASURED_NAME]
+        p95, rps, graph = int(metric["p95"]), metric["rps"], metric["graph"]
+        named = f" {MEASURED_NAME:<{NAME_WIDTH}} cpu ["
+        layouts = (
+            (named, True, True),
+            (named, True, False),
+            (named, False, False),
+            (" cpu [", False, False),
+        )
+        for head, with_graph, with_rate in layouts:
+            graph_part = f"  {graph}" if with_graph else ""
+            rate_part = f"  p95 {p95:4d}ms  rps {rps:4d}" if with_rate else ""
+            fixed = len(head) + len("] ") + 4 + len(graph_part) + len("  mem ") + 4 + len(rate_part)
+            if width - fixed >= 3 or head == " cpu [":
+                break
+        cells = clamp(width - fixed, 0, BAR_WIDTH)
+        return (head + usage_cells_text(cpu, cells) + "] " + usage_value_text(cpu)
+                + graph_part + "  mem " + usage_value_text(mem) + rate_part)
+
+    def _row(self, name, width, mem_plain, mem_color):
+        """서비스 행을 만든다. 폭은 화면 글자 수로 재고, 색 코드가 든 mem_color 는 그대로 붙인다."""
+        metric = self.metrics[name]
+        cpu, p95, rps = metric["cpu"], int(metric["p95"]), metric["rps"]
         head = f" {name:<{NAME_WIDTH}} cpu [] {cpu:3.0f}%"
         tails = (
-            f"  mem {mem:3.0f}%  p95 {p95:4d}ms  rps {rps:4d}",
-            f"  rps {rps:4d}",
-            "",
+            (f"  mem {mem_plain}  p95 {p95:4d}ms  rps {rps:4d}", f"  mem {mem_color}  p95 {p95:4d}ms  rps {rps:4d}"),
+            (f"  rps {rps:4d}", f"  rps {rps:4d}"),
+            ("", ""),
         )
-        for tail in tails:
-            extra = width - len(head) - len(tail)
+        for plain_tail, tail in tails:
+            extra = width - len(head) - len(plain_tail)
             if extra >= 0:
                 break
         bar_w = min(BAR_WIDTH, extra // 2)
@@ -269,18 +343,6 @@ class Monitor:
         if spark_w:
             row += " " * SPARK_GAP + sparkline(self.cpu_history[name], spark_w)
         return row + tail
-
-    def _chart_row(self, width):
-        label = " rps "
-        room = width - len(label)
-        points = list(self.totals)[-room:] if room > 0 else []
-        top = max(points) if points and max(points) > 0 else 1
-        cells = []
-        for point in points:
-            ratio = point / top
-            index = clamp(round(ratio * (len(RAMP) - 1)), 0, len(RAMP) - 1)
-            cells.append(color(RAMP[index], ratio_color(ratio)))
-        return color(label, GRAY) + "".join(cells)
 
     def _log_row(self, entry, width):
         stamp, level, module, text = entry
@@ -303,7 +365,8 @@ class Monitor:
         rule = color("-" * width, DIM)
         lines = [self._header(width), rule, self._table_heading(width)]
         lines += [self._service_row(name, width) for name in SERVICES]
-        lines.append(self._chart_row(width))
+        cpu, mem = self._usage.snapshot()
+        lines.append(self._measured_row(width, cpu, mem))
         lines.append(rule)
         lines.append(" RECENT EVENTS")
         recent = self.logs[-LOG_LINES:]

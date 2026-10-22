@@ -1,0 +1,61 @@
+{
+  "title": "TETRIS",
+  "score": "SCORE",
+  "lines": "LIGNES",
+  "level": "NIVEAU",
+  "next": "SUIVANT",
+  "controls": [
+    "A/D ou ←/→ : déplacer",
+    "S ou ↓ : descente rapide",
+    "W ou ↑ : tourner",
+    "Espace : chute directe",
+    "P : pause   Q : quitter"
+  ],
+  "status_game_over": "PARTIE TERMINÉE - R : recommencer, Q : quitter",
+  "status_paused": "PAUSE - P : reprendre",
+  "tty_required": "Veuillez lancer ceci dans un terminal interactif.",
+  "toggle_hint": "Ctrl+T : basculer   2 : échelle   3 : serpent   4 : démineur",
+  "monitor": {
+    "prompt": "$ ",
+    "command_help": {
+      "help": "afficher cette liste",
+      "status": "afficher l'usage du CPU et de la mémoire",
+      "logs": "afficher les dernières lignes du journal",
+      "clear": "effacer cette sortie"
+    },
+    "not_found": "{name} : commande introuvable",
+    "status_title": "ÉTAT DU SERVICE",
+    "status_line": "{service:<14} {state:<5} cpu {cpu:3.0f}%  mem {mem:3.0f}%  p95 {p95:4d}ms",
+    "state_ok": "ok",
+    "state_warn": "alerte"
+  },
+  "ladder": {
+    "title": "JEU DE L'ÉCHELLE",
+    "pick": "←/→ : choisir la colonne de départ et suivre le chemin",
+    "hint": "1-4 : jeux   R : nouvelle échelle   Ctrl+T : moniteur   Q : quitter",
+    "picked": "départ {start} -> arrivée {end}",
+    "none": "Aucune colonne choisie"
+  },
+  "snake": {
+    "title": "SERPENT",
+    "score": "SCORE",
+    "length": "LONGUEUR",
+    "best": "RECORD",
+    "game_over": "PARTIE TERMINÉE - R : recommencer",
+    "full": "PLEIN ! - R : rejouer",
+    "controls": "Flèches/WASD : tourner",
+    "quit": "Q : quitter   R : recommencer",
+    "switch": "1-4 : jeux   Ctrl+T : moniteur"
+  },
+  "minesweeper": {
+    "title": "DÉMINEUR",
+    "mines": "MINES",
+    "time": "TEMPS",
+    "boom": "BOUM ! - R : recommencer",
+    "clear": "GAGNÉ ! - R : rejouer",
+    "controls": "Flèches/WASD : déplacer",
+    "open": "Espace/Entrée : ouvrir   F : drapeau",
+    "quit": "Q : quitter   R : recommencer",
+    "switch": "1-4 : jeux   Ctrl+T : moniteur"
+  }
+}
