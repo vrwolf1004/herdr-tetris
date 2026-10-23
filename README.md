@@ -2,9 +2,9 @@
 
 [**English**](README.md) | [한국어](README.ko.md)
 
-Languages: English (default) · Korean
+Languages: English (default) · Korean · Japanese · German · Spanish · French · Russian
 
-A terminal Tetris game for herdr's shared `herdr-dock` workspace. It opens on a fake system monitor, and `Ctrl+T` switches to the game.
+Terminal games for herdr's shared `herdr-dock` workspace: Tetris (`1`), Ladder (`2`), Snake (`3`), and Minesweeper (`4`). It opens on a fake system monitor, and `Ctrl+T` switches between the monitor and the games.
 
 ## Installation
 
@@ -42,7 +42,7 @@ Without herdr, run the game directly from the repository root with `python src/t
 
 ## Language
 
-- The language is chosen in this order: `--lang auto|en|ko`, the `HERDR_TETRIS_LANG` environment variable, `language` in the repository's `config.json`, the system locale (Korean if the system is Korean, otherwise English), and English.
+- The language is chosen in this order: `--lang auto|en|ko|ja|de|es|fr|ru`, the `HERDR_TETRIS_LANG` environment variable, `language` in the repository's `config.json`, the system locale (if it is one of the supported languages), and English.
 - The monitor screen's dashboard text is always English. Command responses (`help`, `status`, and others) and the game screen follow the chosen language.
 - The environment variable follows the `HERDR_<NAME>_LANG` form used by other plugins. The older `TETRIS_LANG` is no longer read.
 

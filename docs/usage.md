@@ -61,17 +61,21 @@ The command line shows at most 80 characters (`src/monitor.py:50`).
 
 The language is chosen in this order, highest priority first:
 
-1. `--lang auto|en|ko` (`src/tetris.py:261-266`)
-2. `HERDR_TETRIS_LANG` environment variable (`src/i18n.py:39`). The old `TETRIS_LANG` is no longer read.
+1. `--lang auto|en|ko|ja|de|es|fr|ru` (`src/tetris.py:416-420`)
+2. `HERDR_TETRIS_LANG` environment variable (`src/i18n.py:49`). The old `TETRIS_LANG` is no longer read.
 3. `language` in `config.json` at the repository root (`src/i18n.py:30-35`, `config.json`)
-4. System locale: Korean → `ko`, anything else → `en` (`src/i18n.py:18-27`)
+4. System locale: if it is one of the supported languages, that language (`src/i18n.py:18-41`)
 5. Fallback `en` (`src/i18n.py:15`)
 
-`auto` means "not set", so the next source is checked. Values other than `en` and `ko` are ignored in the environment variable and `config.json`.
+`auto` means "not set", so the next source is checked. Values that are not supported languages are ignored in the environment variable and `config.json`.
 
-Screen strings live in `src/locales/en.json` and `src/locales/ko.json`. Both files must have the same keys, including the `monitor` block with the prompt, command descriptions, command responses, and log templates. The keys are checked by `tests/test_i18n.py`.
+Screen strings live in `src/locales/<language>.json`, one file per language. Every file must have every key from `en.json`, including the `monitor` block with the prompt, command descriptions, command responses, and log templates. The keys are checked by `tests/test_locales.py` and `tests/test_i18n.py`.
 
-The `--help` text is English only (`src/tetris.py:261-266`).
+The `--help` text is English only (`src/tetris.py:416-420`).
+
+## Other games
+
+On the game screen, keys `1`–`4` pick a game: `1` Tetris, `2` Ladder, `3` Snake, `4` Minesweeper (`src/tetris.py:213-214`). While a game is in progress, the number keys are ignored, so the current game is not thrown away. Once that game has ended, a number key switches to its game and starts it fresh. "In progress" means: Tetris is not game over; Snake is playing; Minesweeper is playing and its first cell has been opened; Ladder is always treated as finished. Snake's best score is remembered only while the program runs and is not saved. This guide describes only Tetris. The controls and rules of the other three games are in their source files (`src/ladder.py`, `src/snake.py`, `src/minesweeper.py`) and are not yet documented here.
 
 ## Controls
 
@@ -119,7 +123,7 @@ The repository is also a herdr plugin (`herdr-plugin.toml`). Its actions run `sr
 | Start the game in the dock | `start` | `start-windows` | `src/plugin.py start` |
 | Stop the game and hide the dock pane | `stop` | `stop-windows` | `src/plugin.py stop` |
 
-- `start` takes a pane from the shared `herdr-dock` workspace and runs the game in it. If the game is already running, it does nothing.
+- `start` takes a pane from the shared `herdr-dock` workspace and runs the game in it. If the game is already running, it does nothing. If the host process was killed and left a marker behind, `start` ignores that marker and starts the game again.
 - The dock registration key is `herdr-tetris` (`DOCK_KEY`), so the dock marker file is `herdr-tetris.dock`. `start` sets the dock title to `mon` with `register_dock`.
 - The plugin registers a fake agent with the id `mon` (`AGENT_ID`) and sets its display name to `mon` (`src/plugin.py`).
 - `stop` closes the game pane, which stops the game. It removes the agent registration and releases the dock pane. If the dock has no other blocks, it closes the whole workspace.

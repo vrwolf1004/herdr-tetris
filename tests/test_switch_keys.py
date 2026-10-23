@@ -6,7 +6,16 @@ from unittest import mock
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "src"))
 
 import i18n  # noqa: E402
+import snake  # noqa: E402
 import tetris  # noqa: E402
+
+
+class FinishedGame(tetris.Game):
+    """끝난 판. 숫자 키는 진행 중인 판에서는 무시되므로, 넘어가기 규칙을 보는 테스트는 끝난 판으로 시작한다."""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.game_over = True
 
 
 class FakeKeys:
@@ -33,6 +42,8 @@ def run_main(keys):
     with mock.patch.object(tetris, "read_key", side_effect=FakeKeys(keys)), \
             mock.patch.object(tetris, "draw", side_effect=lambda lines: frames.append(chr(10).join(lines))), \
             mock.patch.object(tetris, "TerminalMode", NoTerminal), \
+            mock.patch.object(tetris, "Game", FinishedGame), \
+            mock.patch.object(snake.Snake, "status", return_value="lost"), \
             mock.patch.object(tetris.sys, "stdin") as stdin:
         stdin.isatty.return_value = True
         code = tetris.main(["--lang", "en"])

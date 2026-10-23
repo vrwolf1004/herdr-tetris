@@ -61,17 +61,21 @@ $ _
 
 다음 순서로 언어를 정하며, 위에 있을수록 우선합니다.
 
-1. `--lang auto|en|ko` 옵션(`src/tetris.py:261-266`)
-2. `HERDR_TETRIS_LANG` 환경 변수(`src/i18n.py:39`). 예전 `TETRIS_LANG`은 더 이상 읽지 않습니다.
+1. `--lang auto|en|ko|ja|de|es|fr|ru` 옵션(`src/tetris.py:416-420`)
+2. `HERDR_TETRIS_LANG` 환경 변수(`src/i18n.py:49`). 예전 `TETRIS_LANG`은 더 이상 읽지 않습니다.
 3. 저장소 루트의 `config.json`에 있는 `language`(`src/i18n.py:30-35`, `config.json`)
-4. 시스템 로케일: 한국어면 `ko`, 그 밖이면 `en`(`src/i18n.py:18-27`)
+4. 시스템 로케일: 지원하는 언어 중 하나면 그 언어, 그 밖이면 `en`(`src/i18n.py:18-41`)
 5. 기본값 `en`(`src/i18n.py:15`)
 
-`auto`는 "지정하지 않음"이라서 다음 단계로 넘어갑니다. 환경 변수와 `config.json`에서 `en`, `ko` 외의 값은 무시합니다.
+`auto`는 "지정하지 않음"이라서 다음 단계로 넘어갑니다. 환경 변수와 `config.json`에서 지원하지 않는 언어 값은 무시합니다.
 
-화면 문자열은 `src/locales/en.json`, `src/locales/ko.json`에 있습니다. 두 파일의 키는 같아야 하며, 입력 프롬프트, 명령 설명, 명령 응답, 로그 문구를 담은 `monitor` 항목까지 포함해 `tests/test_i18n.py`가 확인합니다.
+화면 문자열은 언어마다 `src/locales/<언어>.json`에 있습니다. 모든 파일은 `en.json`의 키를 모두 가져야 하며, 입력 프롬프트, 명령 설명, 명령 응답, 로그 문구를 담은 `monitor` 항목까지 포함해 `tests/test_locales.py`와 `tests/test_i18n.py`가 확인합니다.
 
-`--help` 문구는 영어만 있습니다(`src/tetris.py:261-266`).
+`--help` 문구는 영어만 있습니다(`src/tetris.py:416-420`).
+
+## 다른 게임
+
+게임 화면에서 `1`~`4` 키로 게임을 고릅니다. `1` 테트리스, `2` 사다리 게임, `3` 스네이크, `4` 지뢰찾기입니다(`src/tetris.py:213-214`). 게임이 진행 중이면 숫자 키는 무시하므로 지금 판을 버리지 않습니다. 그 판이 끝난 뒤에는 숫자 키로 그 게임에 들어가면 새로 시작합니다. "진행 중"의 기준은 다음과 같습니다. 테트리스는 게임 오버가 아닐 때, 스네이크는 playing 상태일 때, 지뢰찾기는 playing 상태이고 첫 칸을 연 뒤, 사다리 게임은 항상 끝난 것으로 봅니다. 스네이크의 최고 점수는 실행하는 동안만 기억하며 저장하지 않습니다. 이 문서는 테트리스만 설명합니다. 나머지 세 게임의 조작법과 규칙은 소스 파일(`src/ladder.py`, `src/snake.py`, `src/minesweeper.py`)에 있으며, 아직 이 문서에는 없습니다.
 
 ## 조작법
 
@@ -119,7 +123,7 @@ macOS에서는 기본 설정상 `Ctrl+T`가 `SIGINFO` 신호를 보내서 프로
 | dock에서 게임 시작 | `start` | `start-windows` | `src/plugin.py start` |
 | 게임 종료와 dock pane 숨기기 | `stop` | `stop-windows` | `src/plugin.py stop` |
 
-- `start`는 공용 `herdr-dock` workspace에서 pane 하나를 받아 그 안에서 게임을 돌립니다. 게임이 이미 떠 있으면 아무것도 하지 않습니다.
+- `start`는 공용 `herdr-dock` workspace에서 pane 하나를 받아 그 안에서 게임을 돌립니다. 게임이 이미 떠 있으면 아무것도 하지 않습니다. 호스트 프로세스가 강제로 종료돼 표식만 남은 경우에는 그 표식을 무시하고 게임을 다시 띄웁니다.
 - dock 등록 키는 `herdr-tetris`(`DOCK_KEY`)라서 dock 표시 파일은 `herdr-tetris.dock`입니다. `start`는 `register_dock`으로 dock 제목을 `mon`으로 등록합니다.
 - 플러그인은 `mon` id(`AGENT_ID`)의 가짜 agent로 등록되고, 표시 이름도 `mon`입니다(`src/plugin.py`).
 - `stop`은 게임 pane을 닫아 게임을 끝냅니다. agent 등록을 해제하고 dock pane을 돌려줍니다. dock에 다른 블록이 없으면 workspace 전체를 닫습니다.

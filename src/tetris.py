@@ -276,6 +276,8 @@ def play_minesweeper(game, strings):
         if not key:
             continue
         if key in NUMBER_KEYS:
+            if game.status() == "playing" and game.started_at is not None:
+                continue  # 진행 중인 판이 있으면 숫자 키는 무시한다 (판을 버리지 않는다)
             return key
         action = key.lower()
         if action == "q":
@@ -302,6 +304,8 @@ def play_snake(game, strings):
         if key == "switch":
             return "monitor"
         if key in NUMBER_KEYS:
+            if game.status() == "playing":
+                continue  # 진행 중인 판이 있으면 숫자 키는 무시한다 (판을 버리지 않는다)
             return key
         if key:
             action = key.lower()
@@ -364,6 +368,8 @@ def play(game, strings, monitor, in_monitor):
         if key == "interrupt":
             return "quit"
         if not in_monitor and key in NUMBER_KEYS:
+            if not game.game_over:
+                continue  # 진행 중인 판이 있으면 숫자 키는 무시한다 (판을 버리지 않는다)
             return key
         if key == "switch":
             switch = True

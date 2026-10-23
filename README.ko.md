@@ -2,9 +2,9 @@
 
 [English](README.md) | [**한국어**](README.ko.md)
 
-지원 언어: 영어(기본) · 한국어
+지원 언어: 영어(기본) · 한국어 · 일본어 · 독일어 · 스페인어 · 프랑스어 · 러시아어
 
-herdr 공유 `herdr-dock` workspace에서 도는 터미널 테트리스입니다. 가짜 시스템 모니터 화면으로 시작하고, `Ctrl+T`로 게임 화면을 엽니다.
+herdr 공유 `herdr-dock` workspace에서 도는 터미널 게임입니다. 테트리스(`1`), 사다리 게임(`2`), 스네이크(`3`), 지뢰찾기(`4`)가 있습니다. 가짜 시스템 모니터 화면으로 시작하고, `Ctrl+T`로 모니터와 게임을 오갑니다.
 
 ## Installation
 
@@ -42,7 +42,7 @@ herdr 없이 실행하려면 저장소 루트에서 `python src/tetris.py`를 �
 
 ## Language
 
-- 언어는 다음 순서로 정합니다. `--lang auto|en|ko`, `HERDR_TETRIS_LANG` 환경 변수, 저장소의 `config.json`에 있는 `language`, 시스템 로케일(한국어 시스템이면 한국어, 그 밖이면 영어), 영어.
+- 언어는 다음 순서로 정합니다. `--lang auto|en|ko|ja|de|es|fr|ru`, `HERDR_TETRIS_LANG` 환경 변수, 저장소의 `config.json`에 있는 `language`, 시스템 로케일(지원하는 언어면 그 언어), 영어.
 - 모니터 화면의 대시보드 문구는 항상 영어입니다. 명령 응답(`help`, `status` 등)과 게임 화면은 고른 언어를 따릅니다.
 - 환경 변수는 다른 플러그인과 같은 `HERDR_<NAME>_LANG` 형식입니다. 예전 `TETRIS_LANG`은 더 이상 읽지 않습니다.
 

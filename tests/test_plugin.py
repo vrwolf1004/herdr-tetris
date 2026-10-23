@@ -53,7 +53,7 @@ class StartStopTest(unittest.TestCase):
 
     def test_start_does_not_relaunch_while_game_is_running(self):
         self.state.write("pane.id", "w1:p2")
-        self.state.write("running", "1")
+        self.state.write("running", str(os.getpid()))  # 살아 있는 호스트의 표식 (pid)
         with mock.patch.object(plugin, "pane_alive", return_value=True), \
                 mock.patch.object(plugin.dock, "ensure_dock_pane") as ensure, \
                 mock.patch.object(plugin.herdr_api, "cli") as cli:

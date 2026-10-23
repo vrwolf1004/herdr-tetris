@@ -13,7 +13,6 @@ agent 해제와 상태 파일 정리는 stop 에서도 한다.
 import argparse
 import os
 import sys
-import time
 
 import herdr_api
 
@@ -82,6 +81,42 @@ def is_sidebar(pane):
     return any(name.startswith(SIDEBAR_TOKEN_PREFIX) for name in (pane.get("tokens") or {}))
 
 
+def pid_alive(pid):
+    """pid 프로세스가 아직 살아 있는지. 종료했으면 False. Windows 에서는 os.kill 을 쓰지 않는다 (프로세스를 끝낼 수 있다)."""
+    if not pid:
+        return False
+    if os.name == "nt":
+        import ctypes
+        from ctypes import wintypes
+        kernel = ctypes.windll.kernel32
+        handle = kernel.OpenProcess(0x1000, False, pid)  # PROCESS_QUERY_LIMITED_INFORMATION
+        if not handle:
+            return False
+        try:
+            code = wintypes.DWORD()
+            if not kernel.GetExitCodeProcess(handle, ctypes.byref(code)):
+                return False
+            return code.value == 259  # STILL_ACTIVE
+        finally:
+            kernel.CloseHandle(handle)
+    try:
+        os.kill(pid, 0)
+    except ProcessLookupError:
+        return False
+    except PermissionError:
+        return True
+    return True
+
+
+def host_alive(marker):
+    """running 표식 (호스트의 프로세스 id) 이 가리키는 호스트가 살아 있는지. 옛 형식 (시각) 이나 빈 값은 살아 있지 않다고 본다."""
+    try:
+        pid = int(marker)
+    except (TypeError, ValueError):
+        return False
+    return pid_alive(pid)
+
+
 def pane_alive(pane_id):
     if not pane_id:
         return False
@@ -103,8 +138,9 @@ def host_command(state_dir, pane_id):
 
 def cmd_start(args):
     state = State(args.state)
-    if pane_alive(state.read("pane.id")) and state.read("running"):
-        return 0  # 이미 게임이 떠 있으면 같은 pane 에 명령을 또 입력하지 않는다
+    if pane_alive(state.read("pane.id")) and host_alive(state.read("running")):
+        return 0  # 호스트가 살아 있으면 같은 pane 에 명령을 또 입력하지 않는다
+    state.remove("running")  # 호스트가 강제로 죽어 남은 표식 (또는 옛 형식) 은 지우고 정상 시작 경로로 간다
     dock.register_dock(DOCK_KEY, title=AGENT_ID)
     workspace_id, pane_id = dock.ensure_dock_pane(DOCK_KEY, PROJECT_DIR)
     state.write("workspace.id", workspace_id)
@@ -135,7 +171,7 @@ def cmd_stop(args):
 
 def cmd_host(args):
     state = State(args.state)
-    state.write("running", str(time.time()))
+    state.write("running", str(os.getpid()))  # 표식은 이 호스트의 프로세스 id. 살아 있는지는 host_alive 로 본다
     herdr_api.try_request("pane.report_agent", {
         "pane_id": args.pane,
         "source": SOURCE,

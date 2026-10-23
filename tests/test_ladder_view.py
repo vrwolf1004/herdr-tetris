@@ -19,6 +19,7 @@ def run_play(keys, in_monitor=True):
     strings = i18n.load_strings("en")
     monitor = Monitor(strings["monitor"], usage=FakeUsage())
     game = Game(random.Random(1))
+    game.game_over = True  # 숫자 키로 넘어가는 경우를 보므로 판은 끝나 있다 (진행 중이면 숫자 키는 무시된다)
     frames = []
     pending = list(keys)
 
@@ -52,6 +53,13 @@ def run_ladder(keys, seed=1):
             mock.patch.object(tetris, "draw", side_effect=lambda lines: frames.append("\n".join(lines))):
         result = tetris.play_ladder(strings, tetris.new_ladder_state())
     return result, frames
+
+
+def finished_tetris(*args, **kwargs):
+    """끝난 테트리스 판. 숫자 키는 진행 중인 판에서는 무시되므로, 넘어가기 흐름은 끝난 판으로 시작한다."""
+    game = Game(*args, **kwargs)  # game.Game (tetris.Game 은 이 함수로 바뀌어 있다)
+    game.game_over = True
+    return game
 
 
 class MonitorKeysTest(unittest.TestCase):
@@ -153,6 +161,7 @@ class KeyFlowTest(unittest.TestCase):
         result, _, _, _ = run_play(["1"], in_monitor=False)
         self.assertEqual(result, "1")
 
+    @mock.patch.object(tetris, "Game", new=finished_tetris)
     def test_tetris_to_ladder_and_back_then_monitor_and_quit(self):
         keys = ["switch", "2", "1", "switch", "interrupt"]
         frames = []
