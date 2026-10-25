@@ -210,7 +210,7 @@ class TerminalMode:
         sys.stdout.flush()
 
 
-NUMBER_KEYS = ("1", "2", "3", "4")  # 게임 화면에서 이 키를 누르면 그 게임으로 바로 간다(새로 시작한다)
+NUMBER_KEYS = ("1", "2", "3", "4")  # 게임 화면에서 이 키를 누르면 판이 진행 중이어도 그 게임으로 간다(끝난 판만 새로 시작한다)
 SCREEN_FOR_KEY = {"1": "tetris", "2": "ladder", "3": "snake", "4": "minesweeper"}
 
 
@@ -276,8 +276,6 @@ def play_minesweeper(game, strings):
         if not key:
             continue
         if key in NUMBER_KEYS:
-            if game.status() == "playing" and game.started_at is not None:
-                continue  # 진행 중인 판이 있으면 숫자 키는 무시한다 (판을 버리지 않는다)
             return key
         action = key.lower()
         if action == "q":
@@ -304,8 +302,6 @@ def play_snake(game, strings):
         if key == "switch":
             return "monitor"
         if key in NUMBER_KEYS:
-            if game.status() == "playing":
-                continue  # 진행 중인 판이 있으면 숫자 키는 무시한다 (판을 버리지 않는다)
             return key
         if key:
             action = key.lower()
@@ -368,8 +364,6 @@ def play(game, strings, monitor, in_monitor):
         if key == "interrupt":
             return "quit"
         if not in_monitor and key in NUMBER_KEYS:
-            if not game.game_over:
-                continue  # 진행 중인 판이 있으면 숫자 키는 무시한다 (판을 버리지 않는다)
             return key
         if key == "switch":
             switch = True
@@ -469,15 +463,15 @@ def main(argv=None):
                     game = Game()
                     screen = "tetris"
                 elif result in NUMBER_KEYS:
-                    # 숫자 키: 지금 게임은 버리고, 그 숫자의 게임을 새로 시작한다.
+                    # 숫자 키: 지금 판은 그대로 두고 그 숫자의 게임으로 간다. 끝난 판만 새로 시작한다.
                     screen = SCREEN_FOR_KEY[result]
-                    if screen == "tetris":
+                    if screen == "tetris" and game.game_over:
                         game = Game()
                     elif screen == "ladder":
                         ladder_state = new_ladder_state()
-                    elif screen == "snake":
+                    elif screen == "snake" and snake_game.status() != "playing":
                         snake_game.restart()
-                    else:
+                    elif screen == "minesweeper" and minesweeper_game.status() != "playing":
                         minesweeper_game.restart()
     except KeyboardInterrupt:
         pass  # POSIX 에서 Ctrl+C 는 글자가 아니라 신호로 들어온다. 터미널은 이미 복구됐다.

@@ -75,7 +75,7 @@ The `--help` text is English only (`src/tetris.py:416-420`).
 
 ## Other games
 
-On the game screen, keys `1`–`4` pick a game: `1` Tetris, `2` Ladder, `3` Snake, `4` Minesweeper (`src/tetris.py:213-214`). While a game is in progress, the number keys are ignored, so the current game is not thrown away. Once that game has ended, a number key switches to its game and starts it fresh. "In progress" means: Tetris is not game over; Snake is playing; Minesweeper is playing and its first cell has been opened; Ladder is always treated as finished. Snake's best score is remembered only while the program runs and is not saved. This guide describes only Tetris. The controls and rules of the other three games are in their source files (`src/ladder.py`, `src/snake.py`, `src/minesweeper.py`) and are not yet documented here.
+On the game screen, keys `1`–`4` pick a game: `1` Tetris, `2` Ladder, `3` Snake, `4` Minesweeper (`src/tetris.py:213-214`). A number key switches games even while a game is in progress. The unfinished game is kept as it was, and it resumes when you come back to it. A game that has ended starts fresh when you switch to it. "Ended" means: Tetris is game over; Snake is not playing; Minesweeper is not playing. Ladder has no ending, so its state is reset on each switch. Snake's best score is remembered only while the program runs and is not saved. This guide describes only Tetris. The controls and rules of the other three games are in their source files (`src/ladder.py`, `src/snake.py`, `src/minesweeper.py`) and are not yet documented here.
 
 ## Controls
 

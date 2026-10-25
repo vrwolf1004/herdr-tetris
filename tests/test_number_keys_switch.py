@@ -1,10 +1,11 @@
-"""게임 중 숫자 키 1~4 는 진행 중인 판을 건드리지 않는다. 끝난 뒤에는 그 숫자의 게임으로 간다.
+"""게임 화면에서 숫자 키 1~4 는 진행 중인 판이 있어도 그 숫자의 게임으로 보낸다.
 
+진행 중인 판은 버리지 않는다. 끝난 판만 숫자 키로 들어갈 때 새로 시작한다(tetris.main 에서 처리).
 진행 중의 기준 (코드 확인):
 - 테트리스: game_over 가 아니면 진행 중이다.
 - 스네이크: status() 가 "playing" 이면 진행 중이다 (벽·몸에 닿으면 "lost", 격자가 차면 "won").
-- 지뢰찾기: status() 가 "playing" 이고 첫 칸을 연 뒤 (started_at 이 있다) 진행 중이다. 첫 칸을 열기 전에는 잃을 판이 없다.
-- 사다리: 끝나는 판이 없어 숫자 키로 항상 넘어간다.
+- 지뢰찾기: status() 가 "playing" 이면 진행 중이다.
+- 사다리: 끝나는 판이 없다.
 """
 
 import copy
@@ -43,11 +44,10 @@ class TetrisDigitTest(unittest.TestCase):
     def setUp(self):
         self.strings = i18n.load_strings("en")
 
-    def test_digit_during_a_running_tetris_game_is_ignored_and_the_board_stays(self):
+    def test_digit_during_a_running_tetris_game_switches_and_the_board_stays(self):
         game = Game(random.Random(1))
         board, score = copy.deepcopy(game.board), game.score
-        result = run(tetris.play, game, self.strings, None, False, keys=["2", "3", "interrupt"])
-        self.assertEqual(result, "quit")
+        self.assertEqual(run(tetris.play, game, self.strings, None, False, keys=["2"]), "2")
         self.assertEqual(game.board, board)
         self.assertEqual(game.score, score)
         self.assertFalse(game.game_over)
@@ -62,11 +62,10 @@ class SnakeDigitTest(unittest.TestCase):
     def setUp(self):
         self.strings = i18n.load_strings("en")
 
-    def test_digit_during_a_running_snake_game_is_ignored(self):
+    def test_digit_during_a_running_snake_game_switches_and_the_snake_stays(self):
         game = snake.Snake(rng=random.Random(1))
         body, score = list(game.body), game.score
-        result = run(tetris.play_snake, game, self.strings, keys=["3", "interrupt"])
-        self.assertEqual(result, "quit")
+        self.assertEqual(run(tetris.play_snake, game, self.strings, keys=["3"]), "3")
         self.assertEqual(list(game.body), body)
         self.assertEqual(game.score, score)
         self.assertFalse(game.dead)
@@ -81,12 +80,11 @@ class MinesweeperDigitTest(unittest.TestCase):
     def setUp(self):
         self.strings = i18n.load_strings("en")
 
-    def test_digit_after_the_first_reveal_is_ignored_and_the_board_stays(self):
+    def test_digit_after_the_first_reveal_switches_and_the_board_stays(self):
         game = minesweeper.Minesweeper(random.Random(1))
         game.reveal(0, 0, now=1.0)  # 첫 칸을 열면 진행 중이다
         revealed = set(game.revealed)
-        result = run(tetris.play_minesweeper, game, self.strings, keys=["4", "interrupt"])
-        self.assertEqual(result, "quit")
+        self.assertEqual(run(tetris.play_minesweeper, game, self.strings, keys=["4"]), "4")
         self.assertEqual(game.revealed, revealed)
         self.assertEqual(game.status(), "playing")
 
@@ -96,7 +94,7 @@ class MinesweeperDigitTest(unittest.TestCase):
 
 
 class LadderDigitTest(unittest.TestCase):
-    def test_digit_on_the_ladder_always_switches(self):
+    def test_digit_on_the_ladder_switches(self):
         strings = i18n.load_strings("en")
         state = tetris.new_ladder_state()
         self.assertEqual(run(tetris.play_ladder, strings, state, keys=["1"]), "1")
