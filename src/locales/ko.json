@@ -13,6 +13,7 @@
   ],
   "status_game_over": "게임 오버 - R: 다시 시작, Q: 종료",
   "status_paused": "일시정지 - P: 계속",
+  "status_playing": "1-4: 게임 전환",
   "tty_required": "터미널에서 직접 실행해 주세요.",
   "toggle_hint": "Ctrl+T: 전환   2: 사다리   3: 스네이크   4: 지뢰찾기",
   "monitor": {

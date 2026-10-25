@@ -98,7 +98,7 @@ def render(game, strings, paused=False):
     elif paused:
         status = strings["status_paused"]
     else:
-        status = ""
+        status = strings["status_playing"]
 
     panel = [
         strings["title"],

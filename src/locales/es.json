@@ -13,6 +13,7 @@
   ],
   "status_game_over": "FIN DEL JUEGO - R: reiniciar, Q: salir",
   "status_paused": "PAUSA - P: continuar",
+  "status_playing": "1-4: cambiar juego",
   "tty_required": "Ejecútelo en una terminal interactiva.",
   "toggle_hint": "Ctrl+T: cambiar   2: escalera   3: serpiente   4: buscaminas",
   "monitor": {

@@ -13,6 +13,7 @@
   ],
   "status_game_over": "PARTIE TERMINÉE - R : recommencer, Q : quitter",
   "status_paused": "PAUSE - P : reprendre",
+  "status_playing": "1-4 : changer de jeu",
   "tty_required": "Veuillez lancer ceci dans un terminal interactif.",
   "toggle_hint": "Ctrl+T : basculer   2 : échelle   3 : serpent   4 : démineur",
   "monitor": {

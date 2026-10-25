@@ -13,6 +13,7 @@
   ],
   "status_game_over": "ゲームオーバー - R: 再開, Q: 終了",
   "status_paused": "一時停止中 - P: 再開",
+  "status_playing": "1-4: ゲーム切替",
   "tty_required": "対話型ターミナルで実行してください。",
   "toggle_hint": "Ctrl+T: 切替   2: はしご   3: スネーク   4: マインスイーパー",
   "monitor": {

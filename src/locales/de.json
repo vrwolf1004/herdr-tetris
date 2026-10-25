@@ -13,6 +13,7 @@
   ],
   "status_game_over": "SPIEL VORBEI - R: neu starten, Q: beenden",
   "status_paused": "PAUSE - P: weiter",
+  "status_playing": "1-4: Spiel wechseln",
   "tty_required": "Bitte in einem interaktiven Terminal ausführen.",
   "toggle_hint": "Ctrl+T: wechseln   2: Leiter   3: Schlange   4: Minensuche",
   "monitor": {

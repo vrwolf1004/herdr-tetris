@@ -13,6 +13,7 @@
   ],
   "status_game_over": "GAME OVER - R: restart, Q: quit",
   "status_paused": "PAUSED - P: resume",
+  "status_playing": "1-4: switch game",
   "tty_required": "Please run this in an interactive terminal.",
   "toggle_hint": "Ctrl+T: switch   2: ladder   3: snake   4: minesweeper",
   "monitor": {
